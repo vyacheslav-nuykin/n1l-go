@@ -1,1 +1,86 @@
-main
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>go.n1l.ru</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: #03050a;
+            color: #b8c7ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .loader {
+            text-align: center;
+        }
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(70,130,220,0.3);
+            border-top-color: #4682dc;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="loader">
+        <div class="spinner"></div>
+        <p>перенаправление...</p>
+    </div>
+
+    <script>
+        const API_BASE = 'https://api.n1l.ru/v1/links';
+        const slug = window.location.pathname.slice(1);
+
+        if (!slug) {
+            fetch(`${API_BASE}/index.json`)
+                .then(res => res.json())
+                .then(data => {
+                    document.body.innerHTML = `
+                        <div style="max-width:600px; padding:2rem;">
+                            <h1>🔗 go.n1l.ru</h1>
+                            <ul style="list-style:none; padding:0;">
+                                ${data.links.map(link => `
+                                    <li style="margin:0.5rem 0;">
+                                        <a href="/${link.slug}" style="color:#4682dc;">/${link.slug}</a>
+                                        → ${link.title}
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    `;
+                });
+        } else {
+            fetch(`${API_BASE}/index.json`)
+                .then(res => res.json())
+                .then(data => {
+                    const link = data.links.find(l => l.slug === slug);
+                    if (link && link.url) {
+                        window.location.href = link.url;
+                    } else {
+                        document.body.innerHTML = `
+                            <div style="text-align:center;">
+                                <h1>404</h1>
+                                <p>ссылку <code>/${slug}</code> не найдено</p>
+                                <a href="/" style="color:#4682dc;">← к списку ссылок</a>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(() => {
+                    document.body.innerHTML = '<div style="text-align:center;"><h1>ошибка загрузки</h1></div>';
+                });
+        }
+    </script>
+</body>
+</html>
